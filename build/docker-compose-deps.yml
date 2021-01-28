@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  eventstore:
+    image: postgres:latest
+    volumes:
+      - eventstore-data:/data/pgsql/eventstore
+    networks:
+      - local
+    ports:
+    - 5432:5432
+    environment:
+      - POSTGRES_USER=eventstore
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=eventstore
+  domain-data:
+    image: postgres:latest
+    volumes:
+      - domain-data:/data/pgsql/domaindata
+    networks:
+      - local
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_USER=domaindata
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=domaindata
+  portal-viewmodel:
+    image: mongo:latest
+    volumes:
+      - viewmodel-data:/data/mongo/db
+      - mongo-config:/data/mongo/configdb
+    networks:
+      - local 
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=portal
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=portal
+  pgadmin:
+    image: dpage/pgadmin4
+    networks:
+      - local
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@eventual.ly
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - 16543:80
+    depends_on:
+      - eventstore
+
+volumes:
+  eventstore-data:
+  domain-data:
+  viewmodel-data:
+  mongo-config:
+    
+networks:
+  local:
+    external: true
+    

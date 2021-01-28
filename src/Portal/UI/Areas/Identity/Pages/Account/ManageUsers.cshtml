@@ -1,0 +1,93 @@
+﻿@page
+
+@model ManageUsersModel
+
+@{
+    ViewData["Title"] = "Manage User accounts";
+}
+
+@functions
+{
+    private readonly Dictionary<Guid, string> _selectedRoleIds = new Dictionary<Guid, string>();
+}
+
+
+<partial name="_StatusMessage" for="StatusMessage" />
+@{
+    Model.Users.ForEach(user => _selectedRoleIds[user.Id] = Guid.Empty.ToString());
+}
+
+<form id="add-user" asp-page-handler="CreateUser" class="form-horizontal">
+    <input type="text" name="username" placeholder="Username" />
+    <input type="password" name="password" placeholder="Password"/>
+    <button type="submit" class="btn btn-success" title="Create user">Create</button>
+</form>
+
+<h4>Users</h4>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Username</th>
+        <th>Assigned Roles</th>
+        @*<th>Deactivate</th>*@
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var user in Model.Users)
+    {
+        <tr>
+            <td>@user.UserName</td>
+            <td>
+                @if (!user.Roles.Any())
+                {
+                    <div>No Roles Assigned</div>
+                }
+                else
+                {
+                    foreach (var role in user.Roles.OrderBy(kvp => kvp.Value))
+                    {
+                        <form id="remove-role-@role.Key-from-user-@user.Id" asp-page-handler="RemoveUserRole" method="post" class="form-horizontal">
+                            @role.Value
+                            <input type="hidden" name="roleId" value="@Guid.Parse(role.Key)"/>
+                            <input type="hidden" name="userId" value="@user.Id"/>
+                            <button type="submit" id="remove-role-@user.Id" class="btn btn-primary" title="Remove @role.Value from @user.UserName">Remove</button>
+                        </form>
+                    }
+                }
+                @{
+                    var unassignedRoleIds = Model.Roles.Keys.Except(user.Roles.Keys);
+                }
+
+                @if (unassignedRoleIds.Any())
+                {
+                    <form id="assign-role-to-user-@user.Id" asp-page-handler="AssignUserRole" method="post" class="form-horizontal">
+                        <div>
+                            <input type="hidden" id="assign-user-id-@user.Id" name="userId" value="@user.Id"/>
+                            <select id="@user.Id-Roles" name="roleId" class="form-control" onchange="$('#add-role-@user.Id')[0].disabled = !this.value">
+                                <option value=""></option>
+                                @foreach (var roleId in unassignedRoleIds)
+                                {
+                                    <option value="@roleId">@Model.Roles[roleId].Name</option>
+                                }
+                            </select>
+                            <button type="submit" id="add-role-@user.Id" disabled="disabled" class="btn btn-primary" title="Assign role to @user.UserName">Assign</button>
+                        </div>
+                    </form>
+                }
+            </td>
+            @*<td>
+                @if (user.Active)
+                {
+                    <form id="deactivate-user-@user.Id" asp-page-handler="DeactivateUser" method="post" class="form-horizontal">
+                        <div>
+                            <input type="hidden" id="deactivate-user-id-@user.Id" name="userId" value="@user.Id"/>
+                            <button type="submit" class="btn btn-primary" title="Deactivate this user's account">Deactivate</button>
+                        </div>
+                    </form>
+                }
+                
+            </td>*@
+        </tr>
+    }
+    </tbody>
+</table>

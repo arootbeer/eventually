@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression />
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <PackageId>$(MSBuildProjectName)</PackageId>
+    <PackageVersion>0.0.1</PackageVersion>
+    <Authors>Matt Mills</Authors>
+    <Description>Wire message handling for network communication between components</Description>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fasterflect.Netstandard" Version="1.0.9" />
+    <PackageReference Include="ImpromptuInterface" Version="7.0.1" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.8" />
+    <PackageReference Include="MsgPack.Cli" Version="1.0.1" />
+    <PackageReference Include="NetMQ" Version="4.0.1.5" />
+    <PackageReference Include="System.Reactive" Version="4.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Interfaces\Common\Eventually.Interfaces.Common.csproj" />
+    <ProjectReference Include="..\..\Interfaces\DomainCommands\Eventually.Interfaces.DomainCommands.csproj" />
+    <ProjectReference Include="..\Configuration\Eventually.Infrastructure.Configuration.csproj" />
+  </ItemGroup>
+
+</Project>

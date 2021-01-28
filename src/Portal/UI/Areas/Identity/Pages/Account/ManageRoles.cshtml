@@ -1,0 +1,55 @@
+﻿@page
+
+@model ManageRolesModel
+
+@{
+    ViewData["Title"] = "Manage User accounts";
+}
+
+@functions
+{
+    private readonly Dictionary<Guid, string> _selectedRoleNames = new Dictionary<Guid, string>();
+}
+
+
+<partial name="_StatusMessage" for="StatusMessage" />
+@{
+    Model.Users.ForEach(user => _selectedRoleNames[user.Id] = null);
+}
+<h4>Roles</h4>
+<form id="add-role" asp-page-handler="CreateRole" class="form-horizontal">
+    <input type="text" name="name" placeholder="Role Name" />
+    <button type="submit" class="btn btn-success" title="Create role">Create</button>
+</form>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Role Name</th>
+        <th>Users with Role</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var role in Model.Roles.Values)
+    {
+        <tr>
+            <td>
+                <form id="rename-role" asp-page-handler="RenameRole" class="form-horizontal">
+                    <div>
+                        <input type="text" name="newName" value="@role.Name"/>
+                        <input type="hidden" name="roleId" value="@role.Id"/>
+                        <button type="submit" class="btn btn-primary" title="Rename this role">Rename</button>
+                    </div>
+                </form>
+            </td>
+            <td>
+                <div>
+                    @foreach (var userId in role.UserIds)
+                    {
+                        <div>@Model.Users.Single(u => u.Id == userId).UserName</div>
+                    }
+                </div>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
