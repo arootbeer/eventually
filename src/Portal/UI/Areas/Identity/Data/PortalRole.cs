@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Eventually.Portal.UI.Areas.Identity.Data
 {
-    public class ServerUIRole : IdentityRole<Guid>, IViewModel
+    public class PortalRole : IdentityRole<Guid>, IViewModel
     {
         public override string NormalizedName => Name.ToUpperInvariant();
 
-        public List<Guid> UserIds { get; set; } = new List<Guid>();
+        public List<Guid> UserIds { get; set; } = new();
         
         public int Version { get; set; }
 

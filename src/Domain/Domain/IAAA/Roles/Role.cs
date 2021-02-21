@@ -11,7 +11,7 @@ namespace Eventually.Domain.IAAA.Roles
         public static ConcurrentHashSet<string> ExistingRoleNames { get; set; }
 
         private string _name;
-        private readonly ConcurrentHashSet<Guid> _assignedUsers = new ConcurrentHashSet<Guid>();
+        private readonly ConcurrentHashSet<Guid> _assignedUsers = new();
 
         private Role(Guid id) : base(id) { }
 

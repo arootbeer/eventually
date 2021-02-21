@@ -6,7 +6,7 @@ namespace Eventually.Tests.Core
 {
     public abstract class BaseTestFixture
     {
-        private static readonly Random Random = new Random();
+        private static readonly Random Random = new();
 
         /// <summary>
         /// Returns a random long value (between the min and/or max values, if provided)

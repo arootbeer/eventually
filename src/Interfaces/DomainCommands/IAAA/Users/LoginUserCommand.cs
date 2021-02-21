@@ -1,9 +1,17 @@
 ﻿namespace Eventually.Interfaces.DomainCommands.IAAA.Users
 {
-    public class LoginUserCommand : ChangeEntityCommand
+    public record LoginUserCommand : ChangeEntityCommand
     {
-        public string IPAddress { get; }
+        public string IPAddress { get; init; }
 
-        public string Password { get; }
+        public string Password { get; init; }
+
+        // TODO: De-naive-ify
+        // https://stackoverflow.com/questions/66015437
+        public override string ToString()
+        {
+            return base.ToString()
+                .Replace(Password, "********");
+        }
     }
 }

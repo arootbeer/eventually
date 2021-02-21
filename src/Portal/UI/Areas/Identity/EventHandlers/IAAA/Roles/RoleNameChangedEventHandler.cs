@@ -5,7 +5,7 @@ using MongoDB.Driver;
 
 namespace Eventually.Portal.UI.Areas.Identity.EventHandlers.IAAA.Roles
 {
-    public class RoleNameChangedEventHandler : MongoVersionedDomainEventHandler<RoleNameChanged, ServerUIRole>
+    public class RoleNameChangedEventHandler : MongoVersionedDomainEventHandler<RoleNameChanged, PortalRole>
     {
         public RoleNameChangedEventHandler(IMongoDatabase database, ILoggerFactory loggerFactory) : base(database, loggerFactory) { }
 

@@ -1,9 +1,9 @@
 ﻿namespace Eventually.Interfaces.DomainCommands.IAAA.Users
 {
-    public class CreateUserCommand : CreateEntityCommand
+    public record CreateUserCommand : CreateEntityCommand
     {
-        public string Username { get; }
+        public string Username { get; init; }
 
-        public string Password { get; }
+        public string Password { get; init; }
     }
 }

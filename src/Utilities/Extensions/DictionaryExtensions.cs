@@ -6,7 +6,7 @@ namespace Eventually.Utilities.Extensions
     {
         public static TValue Get<TKey, TValue>(this IDictionary input, TKey key)
         {
-            return (TValue)input[key];
+            return input.Contains(key) ? (TValue)input[key] : default;
         }
     }
 }

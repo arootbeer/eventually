@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <UserSecretsId>46962B04-EDCD-4B1C-8ABB-BC720F6ABC78</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.3" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.0.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Infrastructure\EventStore\Eventually.Infrastructure.EventStore.csproj" />
+      <ProjectReference Include="..\..\Infrastructure\Transport\Eventually.Infrastructure.Transport.csproj" />
+      <ProjectReference Include="..\Domain\Eventually.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Eventually.Domain.APIHost\obj\Eventually.Domain.APIHost.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="Eventually.Domain.APIHost\obj\project.assets.json" />
+    </ItemGroup>
+
+</Project>

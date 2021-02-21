@@ -4,12 +4,12 @@ using Eventually.Interfaces.Common.Messages;
 
 namespace Eventually.Interfaces.DomainCommands
 {
-    public class DomainCommandResponse : Message
+    public record DomainCommandResponse : Message
     {
-        public Guid CommandId { get; }
+        public Guid CommandId { get; init; }
 
-        public bool Succeeded { get; }
+        public bool Succeeded { get; init; }
 
-        public IEnumerable<DomainCommandResponseError> Errors { get; }
+        public IEnumerable<DomainCommandResponseError> Errors { get; init; }
     }
 }

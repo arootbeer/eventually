@@ -3,12 +3,12 @@ using NodaTime;
 
 namespace Eventually.Interfaces.Common.Messages
 {
-    public class Message : IMessage
+    public record Message : IMessage
     {
-        public Guid Identity { get; }
+        public Guid Identity { get; init; }
 
-        public Guid CorrelationId { get; }
+        public Guid CorrelationId { get; init; }
 
-        public Instant Timestamp { get; }
+        public Instant Timestamp { get; init; }
     }
 }

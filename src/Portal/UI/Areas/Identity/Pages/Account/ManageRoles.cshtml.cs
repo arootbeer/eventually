@@ -15,20 +15,20 @@ namespace Eventually.Portal.UI.Areas.Identity.Pages.Account
     public class ManageRolesModel : PageModel
     {
         private readonly UserManager<PortalUser> _userManager;
-        private readonly RoleManager<ServerUIRole> _roleManager;
+        private readonly RoleManager<PortalRole> _roleManager;
         private readonly IMongoCollection<PortalUser> _users;
-        private readonly IMongoCollection<ServerUIRole> _roles;
+        private readonly IMongoCollection<PortalRole> _roles;
 
         public ManageRolesModel(
             IMongoDatabase database,
             UserManager<PortalUser> userManager,
-            RoleManager<ServerUIRole> roleManager
+            RoleManager<PortalRole> roleManager
             )
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _users = database.GetCollection<PortalUser>(nameof(PortalUser));
-            _roles = database.GetCollection<ServerUIRole>(nameof(ServerUIRole));
+            _roles = database.GetCollection<PortalRole>(nameof(PortalRole));
         }
 
         public bool ShowRemoveButton { get; set; }
@@ -38,7 +38,7 @@ namespace Eventually.Portal.UI.Areas.Identity.Pages.Account
 
         public List<PortalUser> Users { get; set; }
 
-        public Dictionary<string, ServerUIRole> Roles { get; set; }
+        public Dictionary<string, PortalRole> Roles { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -59,7 +59,7 @@ namespace Eventually.Portal.UI.Areas.Identity.Pages.Account
 
             try
             {
-                await _roleManager.CreateAsync(new ServerUIRole {Name = name});
+                await _roleManager.CreateAsync(new PortalRole {Name = name});
                 StatusMessage = $"Role `{name}` was created successfully";
             }
             catch (Exception ex)

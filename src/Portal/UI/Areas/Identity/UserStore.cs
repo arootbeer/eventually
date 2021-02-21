@@ -6,14 +6,13 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Eventually.Domain.IAAA.Users;
+using Eventually.Infrastructure.Transport.CommandBus;
 using Eventually.Interfaces.DomainCommands;
 using Eventually.Interfaces.DomainCommands.IAAA.Roles;
 using Eventually.Interfaces.DomainCommands.IAAA.Users;
 using Eventually.Interfaces.DomainCommands.MessageBuilders.Commands;
 using Eventually.Portal.UI.Areas.Identity.Data;
 using Eventually.Portal.UI.Areas.Identity.EventHandlers.IAAA.Users;
-using Eventually.Portal.UI.Domain;
-using Eventually.Utilities.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -24,7 +23,7 @@ namespace Eventually.Portal.UI.Areas.Identity
     public class UserStore :
         IUserPasswordStore<PortalUser>,
         IUserClaimStore<PortalUser>,
-        IRoleStore<ServerUIRole>,
+        IRoleStore<PortalRole>,
         IUserSecurityStampStore<PortalUser>,
         IUserRoleStore<PortalUser>,
         IUserEmailStore<PortalUser>,
@@ -36,7 +35,7 @@ namespace Eventually.Portal.UI.Areas.Identity
         private readonly IDomainCommandBus _commandBus;
         private readonly IUserLoginHashGenerator _userLoginHashGenerator;
         private readonly IMongoDatabase _mongo;
-        private readonly IMongoCollection<ServerUIRole> _roles;
+        private readonly IMongoCollection<PortalRole> _roles;
         private readonly IMongoCollection<PortalUser> _users;
 
         public UserStore(
@@ -53,7 +52,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             _logger = logger;
             _mongo = mongo;
             _users = mongo.GetCollection<PortalUser>(nameof(PortalUser));
-            _roles = mongo.GetCollection<ServerUIRole>(nameof(ServerUIRole));
+            _roles = mongo.GetCollection<PortalRole>(nameof(PortalRole));
         }
 
         private PortalUser _currentUser;
@@ -88,7 +87,7 @@ namespace Eventually.Portal.UI.Areas.Identity
                     .ToArray());
         }
 
-        private async Task<ServerUIRole> FindRoleMatching(Expression<Func<ServerUIRole, bool>> predicate, CancellationToken cancellationToken)
+        private async Task<PortalRole> FindRoleMatching(Expression<Func<PortalRole, bool>> predicate, CancellationToken cancellationToken)
         {
             return await Task.Factory.StartNew(
                 () =>
@@ -133,7 +132,7 @@ namespace Eventually.Portal.UI.Areas.Identity
 
         public async Task AddToRoleAsync(PortalUser user, string roleName, CancellationToken cancellationToken)
         {
-            var roleId = ((IRoleStore<ServerUIRole>) this).FindByNameAsync(roleName, cancellationToken)
+            var roleId = ((IRoleStore<PortalRole>) this).FindByNameAsync(roleName, cancellationToken)
                 .Result
                 .Id;
             
@@ -179,7 +178,7 @@ namespace Eventually.Portal.UI.Areas.Identity
                 cancellationToken);
         }
 
-        public async Task<IdentityResult> CreateAsync(ServerUIRole role, CancellationToken cancellationToken)
+        public async Task<IdentityResult> CreateAsync(PortalRole role, CancellationToken cancellationToken)
         {
             var command = CreateEntityCommandBuilder.For<CreateRoleCommand>()
                 .IssuedBy(CurrentUser.Id)
@@ -194,7 +193,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             throw new NotImplementedException();
         }
 
-        public async Task<IdentityResult> DeleteAsync(ServerUIRole role, CancellationToken cancellationToken)
+        public async Task<IdentityResult> DeleteAsync(PortalRole role, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -204,7 +203,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             return await FindUserMatching(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
         }
 
-        async Task<ServerUIRole> IRoleStore<ServerUIRole>.FindByIdAsync(string roleId, CancellationToken cancellationToken)
+        async Task<PortalRole> IRoleStore<PortalRole>.FindByIdAsync(string roleId, CancellationToken cancellationToken)
         {
             return await FindRoleMatching(r => r.Id == Guid.Parse(roleId), cancellationToken);
         }
@@ -240,7 +239,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             return await FindUserMatching(user => user.Id == userId.Value, cancellationToken);
         }
 
-        async Task<ServerUIRole> IRoleStore<ServerUIRole>.FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
+        async Task<PortalRole> IRoleStore<PortalRole>.FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
         {
             return await FindRoleMatching(r => r.NormalizedName == normalizedRoleName, cancellationToken);
         }
@@ -254,8 +253,8 @@ namespace Eventually.Portal.UI.Areas.Identity
         {
             return await Task.FromResult(new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.UserName)
+                    new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new(ClaimTypes.Name, user.UserName)
                 }
             );
         }
@@ -280,7 +279,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             return await Task.FromResult(user.NormalizedEmail);
         }
 
-        public async Task<string> GetNormalizedRoleNameAsync(ServerUIRole role, CancellationToken cancellationToken)
+        public async Task<string> GetNormalizedRoleNameAsync(PortalRole role, CancellationToken cancellationToken)
         {
             return await Task.FromResult(role.NormalizedName);
         }
@@ -295,12 +294,12 @@ namespace Eventually.Portal.UI.Areas.Identity
             return await Task.FromResult("");
         }
 
-        public async Task<string> GetRoleIdAsync(ServerUIRole role, CancellationToken cancellationToken)
+        public async Task<string> GetRoleIdAsync(PortalRole role, CancellationToken cancellationToken)
         {
             return await Task.FromResult(role.Id.ToString());
         }
 
-        public async Task<string> GetRoleNameAsync(ServerUIRole role, CancellationToken cancellationToken)
+        public async Task<string> GetRoleNameAsync(PortalRole role, CancellationToken cancellationToken)
         {
             return await Task.FromResult(role.Name);
         }
@@ -362,7 +361,7 @@ namespace Eventually.Portal.UI.Areas.Identity
 
         public async Task RemoveFromRoleAsync(PortalUser user, string roleName, CancellationToken cancellationToken)
         {
-            var roleId = ((IRoleStore<ServerUIRole>)this).FindByNameAsync(roleName, cancellationToken)
+            var roleId = ((IRoleStore<PortalRole>)this).FindByNameAsync(roleName, cancellationToken)
                 .Result
                 .Id;
 
@@ -404,7 +403,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             // no-op - this is taken care of by event handlers
         }
 
-        public async Task SetNormalizedRoleNameAsync(ServerUIRole role, string normalizedName, CancellationToken cancellationToken)
+        public async Task SetNormalizedRoleNameAsync(PortalRole role, string normalizedName, CancellationToken cancellationToken)
         {
             // no-op - this is taken care of by event handlers
         }
@@ -414,7 +413,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             // no-op - this is taken care of by event handlers
         }
 
-        public async Task SetRoleNameAsync(ServerUIRole role, string roleName, CancellationToken cancellationToken)
+        public async Task SetRoleNameAsync(PortalRole role, string roleName, CancellationToken cancellationToken)
         {
             var command = ChangeEntityCommandBuilder.For<ChangeRoleNameCommand>(role.Id)
                 .IssuedBy(CurrentUser.Id)
@@ -460,7 +459,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             await ExecuteCommand(command, cancellationToken);
         }
 
-        public async Task<IdentityResult> UpdateAsync(ServerUIRole role, CancellationToken cancellationToken)
+        public async Task<IdentityResult> UpdateAsync(PortalRole role, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -472,23 +471,9 @@ namespace Eventually.Portal.UI.Areas.Identity
             return await Task.FromResult(IdentityResult.Success);
         }
 
-        private bool _disposed;
-        private IUserLoginStore<PortalUser> _userLoginStoreImplementation;
-        
         public void Dispose()
         {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _disposed = true;
-            _logger.LogDebug($"{nameof(UserStore)} is being disposed.");
-            GC.SuppressFinalize(this);
-
-            _commandBus.Dispose();
-
-            _logger.LogInformation($"{nameof(UserStore)} has been disposed.");
+            // no-op
         }
     }
 }

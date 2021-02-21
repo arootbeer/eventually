@@ -1,7 +1,6 @@
 using System.Threading;
 using Eventually.Portal.UI.Areas.Identity;
 using Eventually.Portal.UI.Areas.Identity.Data;
-using Eventually.Portal.UI.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -11,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using NodaTime;
+using NodaTime.Serialization.JsonNet;
 
 namespace Eventually.Portal.UI
 {
@@ -27,30 +28,38 @@ namespace Eventually.Portal.UI
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddRazorPages();
+            services
+                .AddDatabaseDeveloperPageExceptionFilter()
+                .AddRazorPages()
+                .AddNewtonsoftJson(o => o.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb));
             services.AddServerSideBlazor();
             services
                 .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<PortalUser>>()
                 .AddScoped<IUserStore<PortalUser>, UserStore>()
-                .AddScoped<IRoleStore<ServerUIRole>, UserStore>()
+                .AddScoped<IRoleStore<PortalRole>, UserStore>()
                 .AddScoped<CancellationTokenSource>()
-                .AddSingleton<WeatherForecastService>()
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
                 .AddDefaultIdentity<PortalUser>(options => options.SignIn.RequireConfirmedAccount = false)
-                .AddRoles<ServerUIRole>();
-            services                
-                .AddAuthentication()
-                .AddGoogle(options =>
-                {
-                    IConfigurationSection googleAuthNSection =
-                        Configuration.GetSection("Authentication:Google");
-
-                    options.ClientId = googleAuthNSection["ClientId"];
-                    options.ClientSecret = googleAuthNSection["ClientSecret"];
-                });;
+                .AddRoles<PortalRole>();
+            services
+                .AddAuthentication();
+                // .AddGoogle(options =>
+                // {
+                //     var googleAuthNSection =
+                //         Configuration.GetSection("Authentication:Google");
+                //
+                //     options.ClientId = googleAuthNSection["ClientId"];
+                //     options.ClientSecret = googleAuthNSection["ClientSecret"];
+                // });;
 
             services.Replace(new ServiceDescriptor(typeof(UserManager<PortalUser>), typeof(UserManager), ServiceLifetime.Scoped));
-            services.AddScoped<SignInManager>();
+            services
+                .AddScoped<Areas.Identity.SignInManager<PortalUser>, SignInManager>()
+                .AddScoped<SignInManager>();
+
+            services
+                .AddHostedService<IdentitySeederService>()
+                .AddSingleton<IdentitySeeder>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,7 +68,7 @@ namespace Eventually.Portal.UI
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
+                app.UseMigrationsEndPoint();
             }
             else
             {

@@ -1,0 +1,2 @@
+﻿dotnet user-secrets -p ..\src\Domain\APIHost\Eventually.Domain.APIHost.csproj set "CertPassword" "eventual.ly"
+dotnet user-secrets -p ..\src\Portal\UI\Eventually.Portal.UI.csproj set "CertPassword" "eventual.ly"

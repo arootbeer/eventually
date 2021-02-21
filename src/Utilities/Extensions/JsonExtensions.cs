@@ -1,25 +1,53 @@
 ﻿using System;
-using Eventually.Interfaces.Common.Messages;
+using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NodaTime;
 using NodaTime.Serialization.JsonNet;
 
 namespace Eventually.Utilities.Extensions
 {
+    public static class Type<T>
+    {
+        public static T From(object dto) => FromJson(dto.ToJson(false));
+
+        public static T FromJson(string json) => JsonConvert.DeserializeObject<T>(
+            json, 
+            JsonExtensions.jsonSerializerSettings
+        );
+    }
+    
     public static class JsonExtensions
     {
-        public static string ToJson<T>(this T input, bool indent = true)
+        internal static readonly JsonSerializerSettings jsonSerializerSettings;
+
+        static JsonExtensions()
         {
-            var jsonSerializerSettings = new JsonSerializerSettings
+            jsonSerializerSettings = new JsonSerializerSettings
             {
-                ContractResolver = new InterfaceContractResolver(),
-                Error = (se, ev) => ev.ErrorContext.Handled = true,
+                Error = (_, ev) => ev.ErrorContext.Handled = true,
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                 TypeNameHandling = TypeNameHandling.None
             };
             jsonSerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+        }
+        public static object HydrateFrom(this Type destinationType, IDictionary<string, object> data)
+        {
+            return destinationType.HydrateFrom(data.ToJson(false));
+        }
+        
+        public static object HydrateFrom(this Type destinationType, string json)
+        {
+            var result = JsonConvert.DeserializeObject(
+                json,
+                destinationType,
+                jsonSerializerSettings
+            );
             
+            return result;
+        }
+        
+        public static string ToJson<T>(this T input, bool indent = true)
+        {
             var json = JsonConvert.SerializeObject(
                 input,
                 indent ? Formatting.Indented : Formatting.None,
@@ -27,16 +55,6 @@ namespace Eventually.Utilities.Extensions
             );
 
             return json;
-        }
-
-        private class InterfaceContractResolver : DefaultContractResolver
-        {
-            protected override JsonContract CreateContract(Type objectType)
-            {
-                var serializationType = objectType.GetMostDerivedImplementationType<IMessage>() ?? objectType;
-                var jsonContract = base.CreateContract(serializationType);
-                return jsonContract;
-            }
         }
     }
 }

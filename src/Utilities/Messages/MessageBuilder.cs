@@ -11,7 +11,7 @@ namespace Eventually.Utilities.Messages
         IMessageBuilder<TMessage>
         where TMessage : class, IMessage
     {
-        private readonly Dictionary<string, object> _valueProvider = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> _valueProvider = new();
 
         public IMessageBuilder<TMessage> With<T>(Expression<Func<TMessage, T>> property, T value)
         {

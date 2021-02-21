@@ -2,59 +2,37 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Eventually.Domain.ServiceHost.Configuration;
-using Eventually.Infrastructure.Transport.Extensions;
-using Eventually.Infrastructure.Transport.Messages;
-using Eventually.Infrastructure.Transport.Sockets;
-using Eventually.Interfaces.Common;
 using Eventually.Interfaces.DomainCommands;
 using Eventually.Interfaces.DomainCommands.MessageBuilders.CommandResponses;
 using Eventually.Interfaces.DomainEvents;
 using Eventually.Utilities.Extensions;
 using Fasterflect;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using NetMQ;
-using NetMQ.Sockets;
 using NEventStore.Domain;
 using NEventStore.Domain.Persistence;
 
-namespace Eventually.Domain.ServiceHost
+namespace Eventually.Domain.APIHost.Controllers
 {
-    public class DomainServiceHost : IUniquelyIdentified, IHostedService, IDisposable
+    [ApiController]
+    [Route("/domain/[controller]")]
+    public class CommandController : ControllerBase
     {
         private readonly IRepository _repository;
-        private readonly IWireMessageFactory _wireMessageFactory;
         private readonly ILogger _logger;
 
-        private readonly NetMQPoller _poller;
-        private readonly RouterSocket _mySocket;
+        private readonly Dictionary<Type, (Type type, MethodInfo handler)> _changeCommandHandlerMapping = new();
+        private readonly Dictionary<Type, MethodInfo> _createMethodMapping = new();
 
-        public Guid Identity { get; }
-
-        private readonly Dictionary<Type, (Type type, MethodInfo handler)> _changeCommandHandlerMapping = new Dictionary<Type, (Type, MethodInfo)>();
-        private readonly Dictionary<Type, MethodInfo> _createMethodMapping = new Dictionary<Type, MethodInfo>();
-
-        public DomainServiceHost(
-            IDomainServiceHostConfiguration hostConfiguration,
-            ISocketFactory socketFactory,
+        public CommandController(
             IRepository repository,
-            IWireMessageFactory wireMessageFactory,
             ILoggerFactory loggerFactory
         )
         {
             _repository = repository;
-            _wireMessageFactory = wireMessageFactory;
-
-            Identity = hostConfiguration.Identity;
-            _logger = loggerFactory.CreateLogger(typeof(DomainServiceHost).Name);
+            _logger = loggerFactory.CreateLogger(nameof(CommandController));
 
             PopulateMappings();
-
-            _poller = new NetMQPoller();
-            _mySocket = socketFactory.GetServerSocket(Identity, _poller, MessageReceived, hostConfiguration.Server);
         }
 
         // Builds a static mapping of command handlers methods to the types that expose them. It is an error to
@@ -102,13 +80,11 @@ namespace Eventually.Domain.ServiceHost
                 throw new Exception("An exception was encountered while attempting to map event handlers", ex);
             }
         }
-
-        private void MessageReceived(object sender, NetMQSocketEventArgs e)
+        
+        [HttpPost]
+        public IActionResult Execute([FromBody] DomainCommand message)
         {
-            var netMQMessage = e.Socket.ReceiveMultipartMessage();
-            var wireMessage = _wireMessageFactory.Create(netMQMessage);
-            var message = wireMessage.Message;
-
+            // var message = wireMessage.Message;
             if (message is DomainCommand command)
             {
                 DomainCommandResponse response;
@@ -132,7 +108,8 @@ namespace Eventually.Domain.ServiceHost
                                 .Build();
                             break;
                         default:
-                            throw new Exception($"An unknown command of type `{command.GetType().FullName}` was encountered. The command is: {Environment.NewLine}```{message.ToJson()}```");
+                            throw new Exception(
+                                $"An unknown command of type `{command.GetType().FullName}` was encountered. The command is: {Environment.NewLine}```{message.ToJson()}```");
                     }
                 }
                 catch (Exception ex)
@@ -142,23 +119,15 @@ namespace Eventually.Domain.ServiceHost
                         .Failed(ex)
                         .Build();
                 }
-
-                try
-                {
-                    e.Socket.SendResponse(_wireMessageFactory.Create(response, this), wireMessage.SenderId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"Unable to send response for {(response.Succeeded ? "successful" : "failed")} `{command.GetType().FullName}`. The response is: {Environment.NewLine}```{response.ToJson()}```", ex);
-                }
-
-                return;
+                
+                _logger.LogDebug(response.ToString());
+                return Ok(response);
             }
 
-            throw new Exception($"An unknown message of type `{message.GetType().FullName}` was encountered. The message is: {Environment.NewLine}```{message.ToJson()}```");
+            return BadRequest();
         }
-
-        private static readonly MethodInfo ChangeCommandHandler = typeof(DomainServiceHost)
+        
+        private static readonly MethodInfo ChangeCommandHandler = typeof(CommandController)
             .Methods(nameof(HandleChangeCommand))
             .Single();
         private void Handle(ChangeEntityCommand changeCommand)
@@ -205,36 +174,6 @@ namespace Eventually.Domain.ServiceHost
             }
 
             throw new Exception($"The command could not be handled because no aggregate type was found for `{commandType.FullName}`");
-        }
-
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            _poller.RunAsync();
-
-            _logger.LogInformation("Domain Service Host started.");
-
-            return Task.CompletedTask;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Domain Service Host stopping.");
-
-            _poller?.StopAsync();
-
-            return Task.CompletedTask;
-        }
-
-        public void Dispose()
-        {
-            _logger.LogDebug("Domain Service Host is being disposed.");
-            GC.SuppressFinalize(this);
-
-            _poller?.Remove(_mySocket);
-            _poller?.Dispose();
-            _mySocket?.Dispose();
-            
-            _logger.LogInformation("DomainServiceHost has been disposed.");
         }
 
         private class AggregateHelper : AggregateBase<AggregateHelper, CreateEntityCommand, IDomainEvent>

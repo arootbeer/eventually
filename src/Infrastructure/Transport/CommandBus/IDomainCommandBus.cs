@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Eventually.Interfaces.DomainCommands;
 
-namespace Eventually.Portal.UI.Domain
+namespace Eventually.Infrastructure.Transport.CommandBus
 {
     public interface IDomainCommandBus : IDisposable
     {

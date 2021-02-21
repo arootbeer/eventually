@@ -16,7 +16,7 @@ namespace Eventually.Portal.UI.Areas.Identity.Data
 
         public override string NormalizedEmail => Email?.ToUpperInvariant();
 
-        public Dictionary<string, string> Roles { get; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Roles { get; set; } = new();
 
         public int Version { get; set; }
 

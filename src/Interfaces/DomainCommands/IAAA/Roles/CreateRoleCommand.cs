@@ -1,7 +1,7 @@
 ﻿namespace Eventually.Interfaces.DomainCommands.IAAA.Roles
 {
-    public class CreateRoleCommand : CreateEntityCommand
+    public record CreateRoleCommand : CreateEntityCommand
     {
-        public string RoleName { get; }
+        public string RoleName { get; init; }
     }
 }

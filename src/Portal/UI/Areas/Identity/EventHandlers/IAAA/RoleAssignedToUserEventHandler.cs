@@ -7,12 +7,12 @@ namespace Eventually.Portal.UI.Areas.Identity.EventHandlers.IAAA
 {
     public class RoleAssignedToUserEventHandler : MongoDomainEventHandler<RoleAssignedToUser>
     {
-        private readonly IMongoCollection<ServerUIRole> _roles;
+        private readonly IMongoCollection<PortalRole> _roles;
         private readonly IMongoCollection<PortalUser> _users;
 
         public RoleAssignedToUserEventHandler(IMongoDatabase mongo, ILoggerFactory loggerFactory) : base(mongo, loggerFactory)
         {
-            _roles = GetCollection<ServerUIRole>();
+            _roles = GetCollection<PortalRole>();
             _users = GetCollection<PortalUser>();
         }
 
@@ -20,7 +20,7 @@ namespace Eventually.Portal.UI.Areas.Identity.EventHandlers.IAAA
         {
             _roles.FindOneAndUpdateAsync(
                 role => role.Id == domainEvent.EntityId,
-                Builders<ServerUIRole>.Update
+                Builders<PortalRole>.Update
                     .AddToSet(role => role.UserIds, domainEvent.UserId)
             );
 

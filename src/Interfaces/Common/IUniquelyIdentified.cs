@@ -6,9 +6,4 @@ namespace Eventually.Interfaces.Common
     {
         Guid Identity { get; }
     }
-
-    public interface IOptionallySequenced
-    {
-        int? Sequence { get; }
-    }
 }

@@ -32,7 +32,7 @@ namespace Eventually.Infrastructure.EventStore
         private readonly Timer _pollingWakeUpTimer;
 
         private readonly List<Func<IEnumerable<ICommit>>> _pollers = 
-            new List<Func<IEnumerable<ICommit>>>();
+            new();
 
         private long _checkpointToken;
 
@@ -165,7 +165,7 @@ namespace Eventually.Infrastructure.EventStore
         /// and to ensure that only the polling thread is polling from 
         /// event stream.
         /// </summary>
-        private readonly BlockingCollection<object> _pollCollection = new BlockingCollection<object>();
+        private readonly BlockingCollection<object> _pollCollection = new();
 
         private void InnerPollingLoop(object obj)
         {

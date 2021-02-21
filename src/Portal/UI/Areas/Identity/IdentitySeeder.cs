@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Eventually.Infrastructure.Transport.CommandBus;
 using Eventually.Interfaces.DomainCommands;
 using Eventually.Interfaces.DomainCommands.IAAA.Roles;
 using Eventually.Interfaces.DomainCommands.IAAA.Users;
 using Eventually.Interfaces.DomainCommands.MessageBuilders.Commands;
 using Eventually.Portal.UI.Areas.Identity.Data;
-using Eventually.Portal.UI.Domain;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -17,7 +17,7 @@ namespace Eventually.Portal.UI.Areas.Identity
         private readonly IDomainCommandBus _commandBus;
         private readonly ILogger<IdentitySeeder> _logger;
         private readonly IMongoCollection<PortalUser> _users;
-        private readonly IMongoCollection<ServerUIRole> _roles;
+        private readonly IMongoCollection<PortalRole> _roles;
         private readonly CancellationTokenSource _cancellationTokenSource;
 
         public IdentitySeeder(
@@ -29,7 +29,7 @@ namespace Eventually.Portal.UI.Areas.Identity
             _commandBus = commandBus;
 
             _users = database.GetCollection<PortalUser>(nameof(PortalUser));
-            _roles = database.GetCollection<ServerUIRole>(nameof(ServerUIRole));
+            _roles = database.GetCollection<PortalRole>(nameof(PortalRole));
             _cancellationTokenSource = new CancellationTokenSource();
 
             _logger = logger;

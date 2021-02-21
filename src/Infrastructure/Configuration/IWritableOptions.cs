@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Options;
-using System;
+﻿using System;
+using Microsoft.Extensions.Options;
 
-namespace Eventually.Portal.Infrastructure.Configuration
+namespace Eventually.Infrastructure.Configuration
 {
     public interface IWritableOptions<out T> : IOptionsSnapshot<T> where T : class, new()
     {

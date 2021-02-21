@@ -9,8 +9,8 @@ namespace Eventually.Utilities.Collections
     //https://stackoverflow.com/a/11034999
     public class ConcurrentHashSet<T> : IEnumerable<T>, IDisposable
     {
-        private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        private readonly HashSet<T> _hashSet = new HashSet<T>();
+        private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
+        private readonly HashSet<T> _hashSet = new();
 
         public IEnumerator<T> GetEnumerator()
         {

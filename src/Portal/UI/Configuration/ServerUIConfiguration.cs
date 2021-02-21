@@ -1,16 +1,11 @@
-﻿using System;
-using Eventually.Portal.Infrastructure.Configuration;
-
-namespace Eventually.Portal.UI.Configuration
+﻿namespace Eventually.Portal.UI.Configuration
 {
     public class ServerUIConfiguration : IServerUIConfiguration
     {
-        public Guid ServerIdentity { get; set; }
+        public string CertificateFilePath { get; private set; }
+        string IServerUIConfiguration.CertificateFilePath => CertificateFilePath;
 
-        public SocketAddress ServerAddress { get; set; }
-        ISocketAddress IServerUIConfiguration.ServerAddress => ServerAddress;
-        
-        public MongoSettings ViewModelDatabase { get; set; }
+        public MongoSettings ViewModelDatabase { get; private set; }
         IMongoSettings IServerUIConfiguration.ViewModelDatabase => ViewModelDatabase;
     }
 }

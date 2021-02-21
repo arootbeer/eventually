@@ -390,6 +390,7 @@ MigrationBackup/
 # .idea/modules
 # *.iml
 # *.ipr
+.idea/**/applicationhost.config
 
 # CMake
 cmake-build-*/

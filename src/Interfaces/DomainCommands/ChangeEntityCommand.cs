@@ -2,8 +2,8 @@
 
 namespace Eventually.Interfaces.DomainCommands
 {
-    public class ChangeEntityCommand : DomainCommand
+    public record ChangeEntityCommand : DomainCommand
     {
-        public Guid EntityId { get; }
+        public Guid EntityId { get; init; }
     }
 }

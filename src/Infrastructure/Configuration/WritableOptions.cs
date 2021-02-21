@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using System;
+using System.IO;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.IO;
 
-namespace Eventually.Portal.Infrastructure.Configuration
+namespace Eventually.Infrastructure.Configuration
 {
     public class WritableOptions<T> : IWritableOptions<T> where T : class, new()
     {

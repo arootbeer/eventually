@@ -4,12 +4,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Fasterflect;
-using ImpromptuInterface;
 
 namespace Eventually.Utilities.Reflection
 {
@@ -37,58 +35,19 @@ namespace Eventually.Utilities.Reflection
             return CreateInstanceAndPopulateProperties<TObject>(propertyValues);
         }
 
-        public static TObject CreateInstanceAndPopulateProperties<TObject>(IDictionary<string, object> propertyValues) where TObject : class
+        public static TObject CreateInstanceAndPopulateProperties<TObject>(IDictionary<string, object> propertyValues)
+            where TObject : class
         {
-            var desiredType = typeof(TObject);
-            TObject result;
-
-            if (desiredType.IsInterface)
+            var result = (TObject) FormatterServices.GetUninitializedObject(typeof(TObject));
+            foreach (var propertyValuePair in propertyValues)
             {
-                // The "Activator.CreateInstance<>" from the .NET Framework can't instantiate interfaces
-                // To do this we need to create an object (in runtime) that implements this interface
-                result = CreateInterfaceInstance<TObject>(propertyValues);
-            }
-            else
-            {
-                result = (TObject) FormatterServices.GetUninitializedObject(typeof(TObject));
-                foreach (var propertyValuePair in propertyValues)
+                if (!result.TrySetPropertyValue(propertyValuePair.Key, propertyValuePair.Value))
                 {
-                    if (!result.TrySetPropertyValue(propertyValuePair.Key, propertyValuePair.Value))
-                    {
-                        result.SetFieldValue($"<{propertyValuePair.Key}>k__BackingField", propertyValuePair.Value);
-                    }
+                    result.SetFieldValue($"<{propertyValuePair.Key}>k__BackingField", propertyValuePair.Value);
                 }
             }
 
             return result;
-        }
-
-        private static TInterface CreateInterfaceInstance<TInterface>(IDictionary<string, object> propertiesValues = null) where TInterface : class
-        {
-            dynamic expandoObject = new ExpandoObject();
-
-            var expandoType = typeof(TInterface);
-            var expandoProperties = expandoObject as IDictionary<string, object>;
-
-            foreach (var destinationProperty in GetPublicProperties(expandoType))
-            {
-                // Get value from dictionary if it exists
-                if (propertiesValues != null && propertiesValues.ContainsKey(destinationProperty.Name))
-                {
-                    var parameterValue = propertiesValues[destinationProperty.Name];
-                    var convertedValue = CastValueToPropertyType(destinationProperty, parameterValue);
-                    expandoProperties[destinationProperty.Name] = convertedValue;
-                }
-                // If not, get the default value
-                else
-                {
-                    var propertyType = destinationProperty.PropertyType;
-                    var defaultValue = propertyType.IsValueType ? Activator.CreateInstance(propertyType) : null;
-                    expandoProperties[destinationProperty.Name] = defaultValue;
-                }
-            }
-
-            return Impromptu.ActLike<TInterface>(expandoObject);
         }
 
         private static readonly MethodInfo CreateTypedEnumerableMethod = new Func<IEnumerable, IEnumerable<object>>(CreateEnumerableInstance<object>)

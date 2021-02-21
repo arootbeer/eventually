@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Eventually.Portal.UI.Areas.Identity.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,10 +10,10 @@ namespace Eventually.Portal.UI.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class LogoutModel : PageModel
     {
-        private readonly SignInManager _signInManager;
+        private readonly SignInManager<PortalUser> _signInManager;
         private readonly ILogger<LogoutModel> _logger;
 
-        public LogoutModel(SignInManager signInManager, ILogger<LogoutModel> logger)
+        public LogoutModel(SignInManager<PortalUser> signInManager, ILogger<LogoutModel> logger)
         {
             _signInManager = signInManager;
             _logger = logger;

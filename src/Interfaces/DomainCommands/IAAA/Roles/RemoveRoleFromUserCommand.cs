@@ -2,8 +2,8 @@
 
 namespace Eventually.Interfaces.DomainCommands.IAAA.Roles
 {
-    public class RemoveRoleFromUserCommand : ChangeEntityCommand
+    public record RemoveRoleFromUserCommand : ChangeEntityCommand
     {
-        public Guid UserId { get; }
+        public Guid UserId { get; init; }
     }
 }

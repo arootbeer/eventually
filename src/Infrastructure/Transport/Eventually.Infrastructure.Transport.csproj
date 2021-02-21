@@ -15,14 +15,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fasterflect.Netstandard" Version="1.0.9" />
-    <PackageReference Include="ImpromptuInterface" Version="7.0.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
-    <PackageReference Include="MsgPack.Cli" Version="1.0.1" />
-    <PackageReference Include="NetMQ" Version="4.0.1.6" />
-    <PackageReference Include="System.Reactive" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

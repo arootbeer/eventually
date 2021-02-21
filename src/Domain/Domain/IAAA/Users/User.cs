@@ -15,20 +15,20 @@ namespace Eventually.Domain.IAAA.Users
         public const string DefaultProviderName = "Eventually";
         public const string DefaultProviderId = "F33037E9F5B04D3B981258D9744F62CE";
 
-        private static readonly PasswordHasher PasswordHasher = new PasswordHasher();
-        public static readonly ConcurrentHashSet<string> ExistingUserLogins = new ConcurrentHashSet<string>();
-        internal static readonly UserLoginHashGenerator HashGenerator = new UserLoginHashGenerator(); 
+        private static readonly PasswordHasher PasswordHasher = new();
+        public static readonly ConcurrentHashSet<string> ExistingUserLogins = new();
+        internal static readonly UserLoginHashGenerator HashGenerator = new(); 
         
         // object state fields
 #pragma warning disable 649
         private string _username;
         private byte[] _saltedPasswordHash;
         private byte[] _passwordSalt;
-        private readonly List<LoginHistoryEntry> _loginHistory = new List<LoginHistoryEntry>();
+        private readonly List<LoginHistoryEntry> _loginHistory = new();
         private bool _active;
         private bool _locked;
-        private readonly HashSet<string> _logins = new HashSet<string>();
-        private readonly Dictionary<string, byte[]> _tokens = new Dictionary<string, byte[]>();
+        private readonly HashSet<string> _logins = new();
+        private readonly Dictionary<string, byte[]> _tokens = new();
 #pragma warning restore 649
 
         private User(Guid id) : base(id) { }

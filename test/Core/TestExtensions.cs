@@ -6,7 +6,7 @@ namespace Eventually.Tests.Core
 {
     public static class TestExtensions
     {
-        private static readonly Random Random = new Random();
+        private static readonly Random Random = new();
 
         public static IEnumerable<Type> GetBaseTypes(this Type type, bool includeInterfaces = false)
         {

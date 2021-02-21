@@ -15,7 +15,7 @@ namespace Eventually.Interfaces.DomainCommands
 
         public static DomainCommandResponseError From(Exception exception)
         {
-            return new DomainCommandResponseError(exception.ToString());
+            return new(exception.ToString());
         }
     }
 }

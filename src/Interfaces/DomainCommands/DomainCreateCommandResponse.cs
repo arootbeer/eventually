@@ -2,8 +2,8 @@
 
 namespace Eventually.Interfaces.DomainCommands
 {
-    public class DomainCreateCommandResponse : DomainCommandResponse
+    public record DomainCreateCommandResponse : DomainCommandResponse
     {
-        public Guid CreatedEntityId { get; }
+        public Guid CreatedEntityId { get; init; }
     }
 }
