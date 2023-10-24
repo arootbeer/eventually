@@ -5,9 +5,8 @@ services:
     image: postgres:latest
     volumes:
       - eventstore-data:/data/pgsql/eventstore
-    network_mode: bridge
     ports:
-    - "127.0.0.1:5432:5432"
+    - "5432:5432"
     environment:
       - POSTGRES_USER=eventstore
       - POSTGRES_PASSWORD=password
@@ -16,9 +15,8 @@ services:
     image: postgres:latest
     volumes:
       - domain-data:/data/pgsql/domaindata
-    network_mode: bridge
     ports:
-      - "127.0.0.1:5433:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_USER=domaindata
       - POSTGRES_PASSWORD=password
@@ -28,23 +26,33 @@ services:
     volumes:
       - viewmodel-data:/data/mongo/db
       - mongo-config:/data/mongo/configdb
-    network_mode: bridge
     ports:
-      - "127.0.0.1:27017:27017"
+      - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=portal
       - MONGO_INITDB_ROOT_PASSWORD=password
       - MONGO_INITDB_DATABASE=portal
   pgadmin:
     image: dpage/pgadmin4
-    network_mode: bridge
     environment:
       PGADMIN_DEFAULT_EMAIL: test@eventual.ly
       PGADMIN_DEFAULT_PASSWORD: password
     ports:
-      - "127.0.0.1:16543:16543"
+      - "16543:8080"
     depends_on:
       - eventstore
+  mongo-express:
+    image: mongo-express
+    environment:
+      ME_CONFIG_MONGODB_SERVER: portal-viewmodel
+      ME_CONFIG_BASICAUTH_USERNAME: test@eventual.ly
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+      ME_CONFIG_MONGODB_ADMINUSERNAME: portal
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+    ports:
+      - "8081:8081"
+    depends_on:
+      - portal-viewmodel
 
 volumes:
   eventstore-data:

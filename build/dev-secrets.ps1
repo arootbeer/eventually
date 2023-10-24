@@ -1,2 +1,4 @@
-﻿dotnet user-secrets -p ..\src\Domain\APIHost\Eventually.Domain.APIHost.csproj set "CertPassword" "eventual.ly"
-dotnet user-secrets -p ..\src\Portal\UI\Eventually.Portal.UI.csproj set "CertPassword" "eventual.ly"
+﻿Import-PfxCertificate -Password (ConvertTo-SecureString "eventual.ly" -AsPlainText -Force) -CertStoreLocation Cert:\LocalMachine\Root -FilePath $PSScriptRoot\..\src\Domain\APIHost\domain.pfx
+Import-PfxCertificate -Password (ConvertTo-SecureString "eventual.ly" -AsPlainText -Force) -CertStoreLocation Cert:\LocalMachine\Root -FilePath $PSScriptRoot\..\src\Portal\UI\portal.pfx
+dotnet user-secrets -p $PSScriptRoot\..\src\Domain\APIHost\Eventually.Domain.APIHost.csproj set "CertPassword" "eventual.ly"
+dotnet user-secrets -p $PSScriptRoot\..\src\Portal\UI\Eventually.Portal.UI.csproj set "CertPassword" "eventual.ly"
