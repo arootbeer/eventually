@@ -67,7 +67,7 @@ namespace Eventually.Domain.APIHost.ModelBinding
                 var command = commandType.HydrateFrom(payload.CommandData);
 
                 bindingContext.Result = ModelBindingResult.Success(command);
-                _logger.LogDebug(command.ToString());
+                _logger.LogDebug("Bound {");
             }
             catch (Exception ex)
             {

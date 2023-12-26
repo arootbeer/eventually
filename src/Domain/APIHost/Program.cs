@@ -5,6 +5,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.Data;
 using System.Threading;
 using Eventually.Domain.APIHost.Configuration;
+using Eventually.Domain.DI;
 using Eventually.Infrastructure.Configuration;
 using Eventually.Infrastructure.EventStore;
 using Eventually.Infrastructure.EventStore.Configuration;
@@ -72,6 +73,7 @@ namespace Eventually.Domain.APIHost
                         webBuilder.UseStartup<Startup>();
                     }
                 )
+                .UseDefaultDomainCommandHandling()
                 .UseEventStore(
                     customConfiguration: services =>
                         services.AddSingleton<ILastCommitCheckpointProvider, DomainAPIHostCheckpointProvider>()

@@ -1,4 +1,5 @@
-﻿using Eventually.Interfaces.DomainCommands;
+﻿using System.Text;
+using Eventually.Interfaces.DomainCommands;
 
 namespace Eventually.Portal.Domain.IAAA.Commands.Users
 {
@@ -8,12 +9,11 @@ namespace Eventually.Portal.Domain.IAAA.Commands.Users
 
         public string Password { get; init; }
 
-        // TODO: De-naive-ify
-        // https://stackoverflow.com/questions/66015437
         public override string ToString()
         {
-            return base.ToString()
-                .Replace(Password, "********");
+            var builder = new StringBuilder();
+            (this with { Password = null }).PrintMembers(builder);
+            return builder.ToString();
         }
     }
 }

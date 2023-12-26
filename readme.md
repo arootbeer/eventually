@@ -7,7 +7,10 @@ is monolithic, for ease of development - the application server is designed to b
 
 ### TL;DR
 * First time only: run `build\dev-secrets.ps1`, then 
-* Run `build-and-run.ps1` from a Powershell window 
+* ~~Run `build-and-run.ps1` from a Powershell window~~ <== TODO
+* `docker compose -f build\docker-compose-deps.yml up`
+* Build and run `Eventually.Domain.APIHost`
+* Build and run `Eventually.Portal.UI`
 
 ### The long version
 Out of the box, Eventual.ly relies on PostgresQL for event storage and MongoDB for projection storage. In the

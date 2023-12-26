@@ -58,7 +58,7 @@ namespace Eventually.Infrastructure.EventStore.DI
             services.AddSingleton<TService, TImplementation>();
         }
 
-        private class DebuggableRepository : IRepository
+        private sealed class DebuggableRepository : IRepository
         {
             private const string AggregateTypeHeader = "AggregateType";
 
@@ -82,15 +82,14 @@ namespace Eventually.Infrastructure.EventStore.DI
             public void Dispose()
             {
                 Dispose(true);
-                GC.SuppressFinalize(this);
             }
 
-            public virtual TAggregate GetById<TAggregate>(Guid id) where TAggregate : class, IAggregate
+            public TAggregate GetById<TAggregate>(Guid id) where TAggregate : class, IAggregate
             {
                 return GetById<TAggregate>(Bucket.Default, id);
             }
 
-            public virtual TAggregate GetById<TAggregate>(Guid id, int versionToLoad) where TAggregate : class, IAggregate
+            public TAggregate GetById<TAggregate>(Guid id, int versionToLoad) where TAggregate : class, IAggregate
             {
                 return GetById<TAggregate>(Bucket.Default, id, versionToLoad);
             }
@@ -111,7 +110,7 @@ namespace Eventually.Infrastructure.EventStore.DI
                 return aggregate as TAggregate;
             }
 
-            public virtual void Save(IAggregate aggregate, Guid commitId, Action<IDictionary<string, object>> updateHeaders)
+            public void Save(IAggregate aggregate, Guid commitId, Action<IDictionary<string, object>> updateHeaders)
             {
                 Save(Bucket.Default, aggregate, commitId, updateHeaders);
 
@@ -155,7 +154,7 @@ namespace Eventually.Infrastructure.EventStore.DI
                 }
             }
 
-            protected virtual void Dispose(bool disposing)
+            private void Dispose(bool disposing)
             {
                 if (!disposing)
                 {
