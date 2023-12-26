@@ -9,6 +9,8 @@ namespace Eventually.Infrastructure.Transport.CommandBus
     {
         Task ExecuteCommand(DomainCommand command, CancellationToken cancellationToken);
 
+        Task ExecuteCommand(DomainCommand command, Func<DomainCommandResponse, CancellationToken, Task> handler, CancellationToken cancellationToken);
+
         Task<TResult> ExecuteCommand<TResult>(DomainCommand command, Func<DomainCommandResponse, CancellationToken, TResult> handler, CancellationToken cancellationToken);
     }
 }

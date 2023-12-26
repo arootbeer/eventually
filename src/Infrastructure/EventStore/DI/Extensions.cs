@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Eventually.Domain.EventHandlers;
+using Eventually.Domain.EventHandling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NEventStore;
@@ -21,7 +21,7 @@ namespace Eventually.Infrastructure.EventStore.DI
             Action<IServiceCollection> customConfiguration = null)
         {
             hostBuilder.ConfigureServices(
-                (context, services) =>
+                (_, services) =>
                 {
                     services.AddSingleton(EventStoreWireup.Factory);
                     services.AddSingleton(provider => provider.GetService<IStoreEvents>().Advanced);
@@ -102,9 +102,9 @@ namespace Eventually.Infrastructure.EventStore.DI
 
             public TAggregate GetById<TAggregate>(string bucketId, Guid id, int versionToLoad) where TAggregate : class, IAggregate
             {
-                ISnapshot snapshot = GetSnapshot(bucketId, id, versionToLoad);
-                IEventStream stream = OpenStream(bucketId, id, versionToLoad, snapshot);
-                IAggregate aggregate = GetAggregate<TAggregate>(snapshot, stream);
+                var snapshot = GetSnapshot(bucketId, id, versionToLoad);
+                var stream = OpenStream(bucketId, id, versionToLoad, snapshot);
+                var aggregate = GetAggregate<TAggregate>(snapshot, stream);
 
                 ApplyEventsToAggregate(versionToLoad, stream, aggregate);
 
@@ -119,11 +119,11 @@ namespace Eventually.Infrastructure.EventStore.DI
 
             public void Save(string bucketId, IAggregate aggregate, Guid commitId, Action<IDictionary<string, object>> updateHeaders)
             {
-                Dictionary<string, object> headers = PrepareHeaders(aggregate, updateHeaders);
+                var headers = PrepareHeaders(aggregate, updateHeaders);
                 while (true)
                 {
-                    IEventStream stream = PrepareStream(bucketId, aggregate, headers);
-                    int commitEventCount = stream.CommittedEvents.Count;
+                    var stream = PrepareStream(bucketId, aggregate, headers);
+                    var commitEventCount = stream.CommittedEvents.Count;
 
                     try
                     {
@@ -187,7 +187,7 @@ namespace Eventually.Infrastructure.EventStore.DI
 
             private IAggregate GetAggregate<TAggregate>(ISnapshot snapshot, IEventStream stream)
             {
-                IMemento memento = snapshot == null ? null : snapshot.Payload as IMemento;
+                var memento = snapshot == null ? null : snapshot.Payload as IMemento;
                 return _factory.Build(typeof(TAggregate), Guid.Parse(stream.StreamId), memento);
             }
 
@@ -258,8 +258,8 @@ namespace Eventually.Infrastructure.EventStore.DI
 
             private bool ThrowOnConflict(IEventStream stream, int skip)
             {
-                IEnumerable<object> committed = stream.CommittedEvents.Skip(skip).Select(x => x.Body);
-                IEnumerable<object> uncommitted = stream.UncommittedEvents.Select(x => x.Body);
+                var committed = stream.CommittedEvents.Skip(skip).Select(x => x.Body);
+                var uncommitted = stream.UncommittedEvents.Select(x => x.Body);
                 return _conflictDetector.ConflictsWith(uncommitted, committed);
             }
         }

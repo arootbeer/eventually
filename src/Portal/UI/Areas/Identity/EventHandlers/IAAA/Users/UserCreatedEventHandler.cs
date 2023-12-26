@@ -1,5 +1,6 @@
-﻿using Eventually.Interfaces.DomainEvents.IAAA.Users;
+﻿using Eventually.Portal.Domain.IAAA.Events.Users;
 using Eventually.Portal.UI.Areas.Identity.Data;
+using Eventually.Portal.UI.EventHandlers;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 

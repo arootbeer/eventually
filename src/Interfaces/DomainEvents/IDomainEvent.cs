@@ -7,6 +7,8 @@ namespace Eventually.Interfaces.DomainEvents
     {
         public Guid EntityId { get; }
 
-        public int EntityVersion { get; }
+        public long EntityVersion { get; }
+        
+        public Guid IssuingUserId { get; }
     }
 }

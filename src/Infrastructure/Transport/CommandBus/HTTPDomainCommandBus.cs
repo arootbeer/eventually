@@ -11,6 +11,7 @@ using Eventually.Interfaces.Common.Messages;
 using Eventually.Interfaces.DomainCommands;
 using Eventually.Interfaces.DomainCommands.MessageBuilders.CommandResponses;
 using Eventually.Utilities.Extensions;
+using Eventually.Utilities.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Eventually.Infrastructure.Transport.CommandBus
@@ -62,7 +63,7 @@ namespace Eventually.Infrastructure.Transport.CommandBus
                     var message = new CommandWrapper
                     {
                         CommandType = command.GetType().FullName,
-                        CommandData = Type<Dictionary<string, object>>.From(command)
+                        CommandData = TypeConverter<Dictionary<string, object>>.From(command)
                     };
                     
                     var client = _httpClientFactory.CreateClient();
@@ -100,9 +101,16 @@ namespace Eventually.Infrastructure.Transport.CommandBus
             DomainCommandResponse commandResponse;
             if (requestTask.IsFaulted)
             {
-                commandResponse = DomainCommandResponseBuilder.InResponseTo(command)
-                    .Failed(requestTask.Exception)
-                    .Build();
+                _logger.LogError(requestTask.Exception, "Failed to send command to Domain API");
+                commandResponse = command switch
+                {
+                    CreateEntityCommand createCommand => DomainCreateCommandResponseBuilder.InResponseTo(createCommand)
+                        .Failed(requestTask.Exception)
+                        .Build(),
+                    _ => DomainCommandResponseBuilder.InResponseTo(command)
+                        .Failed(requestTask.Exception)
+                        .Build()
+                };
             }
             else
             {
@@ -111,17 +119,18 @@ namespace Eventually.Infrastructure.Transport.CommandBus
                 var responseContent = await httpResponse.Content
                     .ReadAsStringAsync(CancellationToken);
 
-                commandResponse = Type<DomainCreateCommandResponse>.FromJson(responseContent);
+                commandResponse = TypeConverter<DomainCreateCommandResponse>.FromJson(responseContent);
                 if (commandResponse.Succeeded && ((DomainCreateCommandResponse)commandResponse).CreatedEntityId == default)
                 {
-                    commandResponse = Type<DomainCommandResponse>.FromJson(responseContent);
+                    commandResponse = TypeConverter<DomainCommandResponse>.FromJson(responseContent);
                 }
 
                 if (commandResponse?.CommandId != command.Identity)
                 {
                     throw new Exception(
-                        "The received response did not match the command which " +
-                        $"was sent. The received response is {commandResponse}."
+                        $"The received response did not match the command which was sent: {command}" +
+                        Environment.NewLine +
+                        $"The received response is {commandResponse}"
                     );
                 }
             }
@@ -145,12 +154,38 @@ namespace Eventually.Infrastructure.Transport.CommandBus
             }
         }
 
+        public async Task ExecuteCommand(
+            DomainCommand command,
+            Func<DomainCommandResponse, CancellationToken, Task> handler,
+            CancellationToken cancellationToken
+        )
+        {
+            handler ??= (_, _) => default;
+            _responseBucket.TryAdd(
+                command.Identity,
+                new BlockingCollection<DomainCommandResponse>(1)
+            );
+
+            _outboundQueue.Add(command, cancellationToken);
+
+            await Task.Factory
+                .StartNew(
+                    async () =>
+                    {
+                        var response = AwaitResponse(command.Identity, cancellationToken);
+                        await handler(response, cancellationToken);
+                    },
+                    cancellationToken
+                );
+        }
+
         public async Task<TResult> ExecuteCommand<TResult>(
             DomainCommand command,
             Func<DomainCommandResponse, CancellationToken, TResult> handler,
             CancellationToken cancellationToken
         )
         {
+            handler ??= (_, _) => default;
             _responseBucket.TryAdd(
                 command.Identity,
                 new BlockingCollection<DomainCommandResponse>(1)
@@ -162,21 +197,27 @@ namespace Eventually.Infrastructure.Transport.CommandBus
                 .StartNew(
                     () =>
                     {
-                        DomainCommandResponse response = null;
-                        if (_responseBucket.ContainsKey(command.Identity))
-                        {
-                            response = _responseBucket[command.Identity].Take(cancellationToken);
-                        }
-
-                        if (_responseBucket.Remove(command.Identity, out var collection))
-                        {
-                            collection.Dispose();
-                        }
-
-                        return handler == null || response == null ? default : handler(response, cancellationToken);
+                        var response = AwaitResponse(command.Identity, cancellationToken);
+                        return handler(response, cancellationToken);
                     },
                     cancellationToken
                 );
+        }
+
+        private DomainCommandResponse AwaitResponse(Guid commandIdentity, CancellationToken cancellationToken)
+        {
+            DomainCommandResponse response = null;
+            if (_responseBucket.TryGetValue(commandIdentity, out var value))
+            {
+                response = value.Take(cancellationToken);
+            }
+
+            if (_responseBucket.Remove(commandIdentity, out var collection))
+            {
+                collection.Dispose();
+            }
+
+            return response;
         }
 
         private bool _disposed;

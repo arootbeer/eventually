@@ -22,8 +22,4 @@
     <ProjectReference Include="..\Common\Eventually.Interfaces.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="IAAA" />
-  </ItemGroup>
-
 </Project>

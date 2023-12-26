@@ -28,7 +28,8 @@ namespace Eventually.Domain.EventBuilders
             }
 
             return (IDomainEventBuilder<TEvent>) this
-                .With(domainEvent => domainEvent.CorrelationId, command.CorrelationId);
+                .With(domainEvent => domainEvent.CorrelationId, command.CorrelationId)
+                .With(domainEvent => domainEvent.IssuingUserId, command.IssuingUserId);
         }
     }
 }

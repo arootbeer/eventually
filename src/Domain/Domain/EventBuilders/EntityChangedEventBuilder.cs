@@ -4,7 +4,7 @@ using NEventStore.Domain;
 namespace Eventually.Domain.EventBuilders
 {
     public class EntityChangedEventBuilder<TEvent> : DomainEventBuilder<TEvent>
-        where TEvent : class, IDomainChangedEvent
+        where TEvent : class, IEntityChangedEvent
     {
         private EntityChangedEventBuilder(IAggregate aggregate) : base(aggregate) { }
 

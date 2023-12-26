@@ -1,16 +1,110 @@
 ﻿@page "/counter"
+@using Eventually.Infrastructure.Transport.CommandBus
+@using Eventually.Interfaces.DomainCommands.MessageBuilders.Commands
+@using Eventually.Portal.Domain.Counter.Commands
+@using Eventually.Portal.UI.Areas.Counter.Data
+@using MongoDB.Driver
+@using System.Security.Claims
+@using System.Threading
+@using Eventually.Interfaces.DomainCommands
+@inject IMongoDatabase Database
+@inject IDomainCommandBus CommandBus
 
 <h1>Counter</h1>
 
-<p>Current count: @currentCount</p>
+<h3>
+    <button class="btn btn-primary" @onclick="IncrementGlobalCounterAsync">🔼</button>
+    <br/>
+    @_counter.Value
+    <br/>
+    <button class="btn btn-primary" @onclick="DecrementGlobalCounterAsync">🔽</button>
+</h3>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<h4>History</h4>
+    
+<table class="table table-striped table-hover table-bordered">
+    @foreach (var entry in _counter.RecentHistory.OrderByDescending(he => he.Timestamp))
+    {
+        <tr>
+            <td>@entry.Timestamp</td>
+            <td>@entry.UserName</td>
+            <td>@entry.PreviousValue</td>
+        </tr>
+    }
+</table>
+
 
 @code {
-    private int currentCount = 0;
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateProvider { get; set; }
+    
+    
+    private GlobalCounterState _counter;
+    private long _loadedVersion;
+    private ClaimsPrincipal _user;
+    private async Task<ClaimsPrincipal> GetUser() => _user ??= (await AuthenticationStateProvider)?.User;
 
-    private void IncrementCount()
+    protected override async Task OnInitializedAsync()
     {
-        currentCount++;
+        var collection = Database.GetCollection<GlobalCounterState>(nameof(GlobalCounterState));
+        _counter = collection.Find(gcs => gcs.Id == Domain.Counter.Constants.GlobalCounterId).FirstOrDefault();
+
+        if (_counter is null && AuthenticationStateProvider is not null && await GetUser() is not null)
+        {
+            var createCommand = CreateEntityCommandBuilder.For<CreateGlobalCounterCommand>()
+                .IssuedBy(Guid.Parse((await GetUser()).FindFirstValue(ClaimTypes.NameIdentifier)))
+                .Build();
+
+            await CommandBus.ExecuteCommand(createCommand, default);
+        }
+
+        await GetGlobalCounterStateAsync();
+
+        await base.OnInitializedAsync();
     }
+
+    private async Task GetGlobalCounterStateAsync(long? oldVersion = null)
+    {
+        var collection = Database.GetCollection<GlobalCounterState>(nameof(GlobalCounterState));
+        GlobalCounterState counter;
+        do
+        {
+            counter = await collection
+                .Find(gcs => gcs.Id == Domain.Counter.Constants.GlobalCounterId && (oldVersion == null || gcs.Version > oldVersion))
+                .FirstOrDefaultAsync();
+            if (counter is null || oldVersion == counter.Version)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+        } while (counter is null || oldVersion == counter.Version);
+        _counter = counter;
+        _loadedVersion = counter.Version;
+    }
+
+    private async Task IncrementGlobalCounterAsync()
+    {
+        await BuildAndExecuteAsync<IncrementGlobalCounterCommand>();
+    }
+
+    private async Task DecrementGlobalCounterAsync()
+    {
+        await BuildAndExecuteAsync<DecrementGlobalCounterCommand>();
+    }
+
+    private async Task BuildAndExecuteAsync<TCommand>() where TCommand : ChangeEntityCommand
+    {
+        var command = ChangeEntityCommandBuilder.For<TCommand>(_counter.Id)
+            .IssuedBy(Guid.Parse((await GetUser()).FindFirstValue(ClaimTypes.NameIdentifier)))
+            .Build();
+
+        await CommandBus.ExecuteCommand(command, OnResponse, default);
+    }
+
+    private async Task OnResponse(DomainCommandResponse response, CancellationToken cancellationToken)
+    {
+        await GetGlobalCounterStateAsync(_loadedVersion)
+            .ContinueWith(_ => Task.Delay(500, cancellationToken), cancellationToken)
+            .ContinueWith(_ => StateHasChanged(), cancellationToken);
+    }
+
 }

@@ -38,7 +38,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: test@eventual.ly
       PGADMIN_DEFAULT_PASSWORD: password
     ports:
-      - "16543:8080"
+      - "16543:80"
     depends_on:
       - eventstore
   mongo-express:

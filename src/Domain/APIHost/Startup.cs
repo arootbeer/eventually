@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Eventually.Domain.APIHost.ModelBinding;
+using Eventually.Interfaces.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -28,9 +30,9 @@ namespace Eventually.Domain.APIHost
             services.AddControllers()
                 .AddNewtonsoftJson(o => o.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb));
             services.AddOptions<MvcOptions>()
-                .Configure<IHttpRequestStreamReaderFactory, ILoggerFactory>(
-                    (o, rf, lf) =>
-                        o.ModelBinderProviders.Insert(0, new CommandModelBinderProvider(o, rf, lf))
+                .Configure<IHttpRequestStreamReaderFactory, ILoggerFactory, IEnumerable<MessageTypeLookupStrategy>>(
+                    (o, rf, lf, mtls) =>
+                        o.ModelBinderProviders.Insert(0, new CommandModelBinderProvider(o, rf, lf, mtls))
                 );
             services.AddSwaggerGen(c => c.SwaggerDoc("v1", new OpenApiInfo {Title = "Eventually.Domain.APIHost", Version = "v1"}));
         }

@@ -1,4 +1,4 @@
-﻿namespace Eventually.Portal.Infrastructure.Configuration
+﻿namespace Eventually.Infrastructure.Configuration
 {
     public class SocketAddress : ISocketAddress
     {

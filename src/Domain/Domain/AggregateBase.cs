@@ -91,9 +91,10 @@ namespace Eventually.Domain
                     throw new Exception($"Unable to replay event stream for {GetType().FullName}. An event of type {domainEvent.GetType().FullName} belonging to `{domainEvent.EntityId}` was encountered.");
                 }
 
-                //Domain events are supposed to be applied sequentially in version order. If this event is not either the next event (when hydrating) or
-                //the current event (when dispatching after command execution), something has gone wrong.
-                if (!new[] {Version, Version + 1}.Contains(domainEvent.EntityVersion))
+                // Domain events are supposed to be applied sequentially in version order. If this event is not either the next event (when hydrating) or
+                // the current event (when dispatching after command execution), something has gone wrong.
+                // There's an impedance mismatch here because NEventStore uses int for Version - the array type specification can be removed if that changes 
+                if (!new long[] {Version, Version + 1}.Contains(domainEvent.EntityVersion))
                 {
                     throw new Exception($"Unable to replay event stream for {GetType().FullName}. Events between version `{Version}` and `{domainEvent.EntityVersion}` were not found.");
                 }
@@ -102,6 +103,13 @@ namespace Eventually.Domain
             OnAllEvents(domainEvent);
         }
 
+        /// <summary>
+        /// Fired for every event.
+        /// <p><b>Do not increment the entity version in overloads</b> - that is handled in
+        /// the <see cref="IAggregate.ApplyEvent"/> implementation on <see cref="AggregateBase"/>
+        /// </p>
+        /// </summary>
+        /// <param name="domainEvent"></param>
         protected virtual void OnAllEvents(TEvent domainEvent)
         {
         }

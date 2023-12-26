@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Eventually.Infrastructure.Transport;
+using Eventually.Interfaces.Common;
 using Eventually.Interfaces.DomainCommands;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
@@ -14,6 +15,7 @@ namespace Eventually.Domain.APIHost.ModelBinding
     {
         private readonly IList<IInputFormatter> _formatters;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly IEnumerable<MessageTypeLookupStrategy> _messageTypeLookupStrategies;
         private readonly MvcOptions _options;
         private readonly IHttpRequestStreamReaderFactory _readerFactory;
 
@@ -22,12 +24,15 @@ namespace Eventually.Domain.APIHost.ModelBinding
         public CommandModelBinderProvider(
             MvcOptions options,
             IHttpRequestStreamReaderFactory readerFactory,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IEnumerable<MessageTypeLookupStrategy> messageTypeLookupStrategies
+        )
         {
             _options = options;
             _formatters = options.InputFormatters;
             _readerFactory = readerFactory;
             _loggerFactory = loggerFactory;
+            _messageTypeLookupStrategies = messageTypeLookupStrategies;
         }
         public IModelBinder GetBinder(ModelBinderProviderContext context)
         {
@@ -55,6 +60,7 @@ namespace Eventually.Domain.APIHost.ModelBinding
                 _modelBinder = new CommandModelBinder(
                     _formatters,
                     _readerFactory,
+                    _messageTypeLookupStrategies,
                     _options,
                     dictionaryMetadata,
                     _loggerFactory

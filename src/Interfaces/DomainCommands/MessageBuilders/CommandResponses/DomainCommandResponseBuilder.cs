@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Eventually.Utilities.Messages;
 
 namespace Eventually.Interfaces.DomainCommands.MessageBuilders.CommandResponses
@@ -24,11 +23,12 @@ namespace Eventually.Interfaces.DomainCommands.MessageBuilders.CommandResponses
         
         public IDomainCommandResponseBuilderWithSuccessSet Failed(Exception exception, params Exception[] exceptions)
         {
-            foreach (var ex in new[]{exception}.Concat(exceptions))
+            foreach (var ex in Flatten(exception, exceptions))
             {
                 this.With(response => response.Errors, DomainCommandResponseError.From(ex));
             }
-            return this;
+            return (IDomainCommandResponseBuilderWithSuccessSet) this
+                .With(response => response.Succeeded, false);
         }
     }
 }

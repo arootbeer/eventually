@@ -35,9 +35,9 @@ namespace Eventually.Portal.UI
             services.AddServerSideBlazor();
             services
                 .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<PortalUser>>()
-                .AddScoped<IUserStore<PortalUser>, UserStore>()
-                .AddScoped<IRoleStore<PortalRole>, UserStore>()
                 .AddScoped<CancellationTokenSource>()
+                .AddSingleton<IUserStore<PortalUser>, UserStore>()
+                .AddSingleton<IRoleStore<PortalRole>, UserStore>()
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
                 .AddDefaultIdentity<PortalUser>(options => options.SignIn.RequireConfirmedAccount = false)
                 .AddRoles<PortalRole>();
@@ -57,9 +57,9 @@ namespace Eventually.Portal.UI
                 .AddScoped<Areas.Identity.SignInManager<PortalUser>, SignInManager>()
                 .AddScoped<SignInManager>();
 
-            services
-                .AddHostedService<IdentitySeederService>()
-                .AddSingleton<IdentitySeeder>();
+            // services
+            //     .AddHostedService<IdentitySeederService>()
+            //     .AddSingleton<IdentitySeeder>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -90,6 +90,10 @@ namespace Eventually.Portal.UI
                     endpoints.MapControllers();
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
+                    endpoints.MapControllerRoute(
+                        name : "areas",
+                        pattern : "{area:exists}/{controller=Home}/{action=Index}/{id?}"
+                    );
                 }
             );
         }

@@ -1,14 +1,15 @@
-using Eventually.Domain.IAAA.Users;
 using Eventually.Infrastructure.Configuration;
 using Eventually.Infrastructure.EventStore;
 using Eventually.Infrastructure.EventStore.Configuration;
 using Eventually.Infrastructure.EventStore.DI;
 using Eventually.Infrastructure.Transport.DI;
+using Eventually.Portal.Domain.IAAA.Users;
 using Eventually.Portal.UI.Configuration;
 using Eventually.Portal.UI.ViewModel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MongoDb.Bson.NodaTime;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 
@@ -69,8 +70,10 @@ namespace Eventually.Portal.UI
                     ConventionRegistry.Register(
                         "IgnoreExtraElements",
                         new ConventionPack {new IgnoreExtraElementsConvention(true)},
-                        type => true
+                        _ => true
                     );
+                    
+                    NodaTimeSerializers.Register();
                     services.AddHostedService<EventStoreListenerService>();
                 })
                 .UseEventStore(

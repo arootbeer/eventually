@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Eventually.Interfaces.Common.Messages;
 using Eventually.Utilities.Reflection;
@@ -58,6 +59,19 @@ namespace Eventually.Utilities.Messages
             }
 
             return CustomActivator.CreateInstanceAndPopulateProperties<TMessage>(_valueProvider);
+        }
+        
+        protected static Exception[] Flatten(Exception exception, IEnumerable<Exception> exceptions)
+        {
+            return exceptions.Prepend(exception)
+                .SelectMany<Exception, Exception>(
+                    ex => ex switch
+                    {
+                        AggregateException aex => aex.InnerExceptions,
+                        _ => new[] { ex }
+                    }
+                )
+                .ToArray();
         }
     }
 }

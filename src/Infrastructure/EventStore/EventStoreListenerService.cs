@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Eventually.Domain.EventHandlers;
+using Eventually.Domain.EventHandling;
 using Eventually.Infrastructure.EventStore.Configuration;
 using Eventually.Interfaces.DomainEvents;
 using Eventually.Utilities.Extensions;

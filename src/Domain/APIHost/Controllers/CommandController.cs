@@ -37,12 +37,13 @@ namespace Eventually.Domain.APIHost.Controllers
 
         // Builds a static mapping of command handlers methods to the types that expose them. It is an error to
         // have more than one aggregate type which handles a command type.
+        // TODO: replace this with something like MEF, and definitely don't execute it for every request 
         private void PopulateMappings()
         {
             try
             {
-                var assembly = typeof(AggregateBase<,,>).Assembly;
-                var aggregateTypes = assembly.GetTypes()
+                var aggregateTypes = AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(a => a.GetTypes())
                     .Where(type => type.IsAssignableToGenericType(typeof(AggregateBase<,,>)))
                     .Where(type => !type.IsAbstract);
                 foreach (var aggregateType in aggregateTypes)
@@ -84,7 +85,6 @@ namespace Eventually.Domain.APIHost.Controllers
         [HttpPost]
         public IActionResult Execute([FromBody] DomainCommand message)
         {
-            // var message = wireMessage.Message;
             if (message is DomainCommand command)
             {
                 DomainCommandResponse response;

@@ -22,6 +22,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.10" />
+    <PackageReference Include="MongoDb.Bson.NodaTime" Version="3.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
     <PackageReference Include="NodaTime" Version="3.1.9" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -34,6 +35,7 @@
     <ProjectReference Include="..\..\Infrastructure\EventStore\Eventually.Infrastructure.EventStore.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Transport\Eventually.Infrastructure.Transport.csproj" />
     <ProjectReference Include="..\..\Interfaces\DomainEvents\Eventually.Interfaces.DomainEvents.csproj" />
+    <ProjectReference Include="..\Domain\Eventually.Portal.Domain.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Eventually.Infrastructure.Transport;
-using Eventually.Interfaces.DomainCommands;
+using Eventually.Interfaces.Common;
 using Eventually.Utilities.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
@@ -17,6 +19,7 @@ namespace Eventually.Domain.APIHost.ModelBinding
     {
         private readonly IList<IInputFormatter> _formatters;
         private readonly IHttpRequestStreamReaderFactory _readerFactory;
+        private readonly IImmutableList<MessageTypeLookupStrategy> _messageTypeLookupStrategies;
         private readonly ILoggerFactory _loggerFactory;
         private readonly MvcOptions _options;
         private readonly ModelMetadata _commandWrapperMetadata;
@@ -25,6 +28,7 @@ namespace Eventually.Domain.APIHost.ModelBinding
         public CommandModelBinder(
             IList<IInputFormatter> formatters,
             IHttpRequestStreamReaderFactory readerFactory,
+            IEnumerable<MessageTypeLookupStrategy> messageTypeLookupStrategies,
             MvcOptions options,
             ModelMetadata commandWrapperMetadata,
             ILoggerFactory loggerFactory
@@ -32,6 +36,7 @@ namespace Eventually.Domain.APIHost.ModelBinding
         {
             _formatters = formatters;
             _readerFactory = readerFactory;
+            _messageTypeLookupStrategies = messageTypeLookupStrategies.ToImmutableList();
             _loggerFactory = loggerFactory;
             _options = options;
             _commandWrapperMetadata = commandWrapperMetadata;
@@ -51,12 +56,13 @@ namespace Eventually.Domain.APIHost.ModelBinding
 
             await binder.BindModelAsync(bindingContext);
 
-            var payload = (CommandWrapper) bindingContext.Result.Model;
+            var payload = (CommandWrapper)bindingContext.Result.Model
+                          ?? throw new Exception($"Malformed request received: {bindingContext.Result.Model.ToJson()}");
             try
             {
-                var commandType = typeof(DomainCommand)
-                    .Assembly
-                    .GetType(payload.CommandType);
+                var commandType = _messageTypeLookupStrategies
+                    .Single(strategy => strategy.HasMessageType(payload.CommandType))
+                    .GetMessageType(payload.CommandType);
 
                 var command = commandType.HydrateFrom(payload.CommandData);
 

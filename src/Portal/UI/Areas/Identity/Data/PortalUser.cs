@@ -18,7 +18,7 @@ namespace Eventually.Portal.UI.Areas.Identity.Data
 
         public Dictionary<string, string> Roles { get; set; } = new();
 
-        public int Version { get; set; }
+        public long Version { get; set; }
 
         public override string ConcurrencyStamp => Version.ToString();
     }
